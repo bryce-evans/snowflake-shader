@@ -1,0 +1,298 @@
+uniform sampler2D tex_spine;
+uniform sampler2D tex_scatter;
+uniform float inputGrowth;
+uniform float inputRotation;
+//uniform float inputKaleidoscope;
+uniform float inputKaleidoscopeY;
+uniform float inputNoise;
+uniform float inputNoiseScale;
+uniform float inputBevel;
+uniform float inputOutline;
+uniform float ratio;
+uniform bool lightMode;
+uniform vec3 color1;
+uniform vec3 color2;
+uniform float iTime;
+uniform mat4 modelMatrix;
+uniform vec2 iResolution;
+varying vec2 coord;
+
+// This scales the fwidth values so they fit in the range 0 to 1 but use most of that range
+const float hexagonFwidthScale = 5.0;
+const float pi = 3.14;
+
+//https://www.shadertoy.com/view/Msf3WH
+vec2 hash(vec2 p) // replace this by something better
+{
+  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  return - 1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+}
+
+float noise(in vec2 p)
+{
+  const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+  const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+  vec2 i = floor(p + (p.x + p.y) * K1);
+  vec2 a = p - i + (i.x + i.y) * K2;
+  float m = step(a.y, a.x);
+  vec2 o = vec2(m, 1.0 - m);
+  vec2 b = a - o + K2;
+  vec2 c = a - 1.0 + 2.0 * K2;
+  vec3 h = max(0.5 - vec3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
+  vec3 n = h * h * h * h * vec3(dot(a, hash(i + 0.0)), dot(b, hash(i + o)), dot(c, hash(i + 1.0)));
+  return dot(n, vec3(70.0));
+}
+
+struct heightInfo {
+  float height;
+  float snowGrowth;
+  float snowDistance;
+  float bevelGrowth;
+  float n;
+  bool toDiscard;
+};
+
+heightInfo height(vec2 coordinate) {
+  // Rotate based on input
+  vec2 coord2 = coordinate;
+  coord2 -= .5;
+  float rotationInput = inputRotation * (3.14 / 180.);
+  float ris = sin(rotationInput);
+  float ric = cos(rotationInput);
+  coord2 *= mat2(ric, ris, -ris, ric);
+  coord2 += .5;
+
+  //Sixfold division into hexagonal segments
+  //Remap space to -1 to 1
+  vec2 st = coord2;
+  st = st * 2. - 1.;
+  float rotationOffset = -pi / 6.0 + pi;
+  float offsetS = sin(rotationOffset);
+  float offsetC = cos(rotationOffset);
+  st *= mat2(offsetC, offsetS, -offsetS, offsetC);
+  float a = atan(st.x, st.y);
+  float segment = floor((a + pi) / (pi / 3.0));
+
+  float segmentVis = segment * (1.0 / 6.0);
+  //gl_FragColor = vec4(segmentVis);
+
+  //Debug: mismatch between segment number and rotation here
+  float rotation = (-segment + 5.0) * (pi / 3.0);
+  float sin_factor = sin(rotation);
+  float cos_factor = cos(rotation);
+
+  //Scale, translate, and rotate scatter map to match each segment
+  vec2 rotatedCoord = coord2;
+  rotatedCoord -= .5;
+  rotatedCoord *= 2.0;
+  rotatedCoord += vec2(sin_factor, cos_factor) * vec2(.5, -.5);
+  rotatedCoord *= mat2(cos_factor, sin_factor, -sin_factor, cos_factor);
+  rotatedCoord += .5;
+  //gl_FragColor = texture2D(tex_scatter, rotatedCoord);
+
+  //Mirror x coord
+  vec2 noiseCoord = rotatedCoord;
+  rotatedCoord.x = rotatedCoord.x < .5 ? .5 + (.5 - rotatedCoord.x) : rotatedCoord.x;
+
+  //Add imperfections via noise
+  //Variation per segment + pre-mirrored coord so snowflake isn't perfect
+  noiseCoord.x += segment * .1;
+  noiseCoord.y = fract(noiseCoord.y - inputKaleidoscopeY);
+  //'Tile' noise so that it's loops with y kaleidoscope
+  if (noiseCoord.y > .5)
+    noiseCoord.y = 1.0 - noiseCoord.y;
+
+  float noiseScale = lightMode ? 10.0 : 15.0;
+  //float n = noise(noiseCoord*inputNoiseScale);
+  float n = noise(noiseCoord * noiseScale);
+  //gl_FragColor = vec4(n);
+
+  //Less noise at tips, to prevent too much distortion
+  vec2 toCenter = coordinate - vec2(.5, .5);
+  float centerLength = 1.0 - length(toCenter);
+  n *= centerLength * centerLength;
+  //Less noise at center of crystals, to keep their centerfolds intact
+  //vec4 crystal1 = texture2D(tex_scatter, rotatedCoord);
+  //float crystal1Dist = smoothstep(0.0,.65,crystal1.z);
+  //n *= crystal1Dist;
+  //Less noise at center, to prevent arms of small snowflake from warping
+  float pinionUnwarped = texture2D(tex_spine, coord2).g;
+  pinionUnwarped *= pinionUnwarped;
+  n *= pinionUnwarped;
+  vec2 warpedCoord = rotatedCoord * vec2(1.0 + n * inputNoise);
+  //gl_FragColor = vec4(n);
+
+  //Apply kaleidoscope effect
+  //rotatedCoord.x=fract(rotatedCoord.x+inputKaleidoscope);
+  //rotatedCoord.y = fract(rotatedCoord.y+inputKaleidoscopeY);
+  //gl_FragColor = texture2D(tex_scatter, rotatedCoord);
+
+  //Pinions
+  //Create coordinate to sample with noise
+  toCenter = normalize(toCenter);
+  vec2 perpendicular = vec2(toCenter.y, -toCenter.x);
+  vec2 pinionCoord = coord2 + perpendicular * (inputNoise * .1) * n;
+
+  vec4 spine = texture2D(tex_spine, pinionCoord);
+  float pinionThreshold = spine.r;
+  float pinionDist = spine.g;
+  float pinionAlpha = spine.b;
+
+  float pinionGradient = 1.0 - min(1.0, length(st));
+  pinionThreshold *= (pinionGradient * .3) + .7;
+  pinionThreshold += pinionGradient * .5;
+  pinionThreshold *= pinionAlpha;
+  float pinionMask = ((1.0 - pinionThreshold) < inputGrowth - .05) ? 1.0 : 0.0;
+  //gl_FragColor = vec4(pinionThreshold);
+
+  // This number controls how rounded vs. flat the pinions are
+  float fakeFwidthPinionThreshold = 0.05 * hexagonFwidthScale;
+
+  // Hack: put the spines in the middle of the pinions back
+  fakeFwidthPinionThreshold *= 1.0 + 0.1
+    * clamp(500.0 * (rotatedCoord.x - 0.5), 0.0, 1.0)
+    * clamp(100.0 * (rotatedCoord.y - 0.05), 0.0, 1.0);
+
+  vec4 pinion = vec4(pinionThreshold, fakeFwidthPinionThreshold, pinionDist, pinionThreshold);
+
+  //Combine crystals + pinions; note that crystals need to extend past alpha so dFdx on distance doesn't create artifacts
+  //R:growth, B:distance, G:, A:random val and alpha
+  vec4 crystal = texture2D(tex_scatter, warpedCoord);
+  vec4 snowflake = (pinionMask == 1.0) ? pinion : (crystal.b > 0.0) ? crystal : pinion;
+  //gl_FragColor = snowflake;
+
+  float snowGrowth = snowflake.r;
+  float snowDistance = snowflake.b;
+  float snowOffset = snowflake.a;
+  float snowAlpha = snowflake.a == 0.0 ? 0.0 : 1.0;
+
+  //Apply a gradient to control speed of crystal growth
+  float growthSpeed = .25 + n * .07;
+  float growthGradient = smoothstep(inputGrowth, inputGrowth - growthSpeed, (1.0 - snowOffset) * (1.0 - growthSpeed * .5));
+  float growthMask = smoothstep(growthGradient, growthGradient - .005, 1.0 - snowGrowth);
+  //gl_FragColor = vec4(growthSpeed);
+  //gl_FragColor = vec4(growthGradient);
+  //gl_FragColor = vec4(growthMask);
+
+  bool toDiscard = (growthMask == 0.0 || snowAlpha == 0.0);
+  //if (growthMask == 0.0 || snowAlpha == 0.0)
+  //  discard;
+
+  // A small number to avoid dividing by zero
+  const float epsilon = 0.001;
+
+  //Bevel, threshold-based, for growth stages
+  growthGradient = 1.0 - growthGradient;
+  float fakeFwidthGrowth = snowflake.g / hexagonFwidthScale;
+  float bevelGrowth = (snowGrowth - growthGradient) / (epsilon + fakeFwidthGrowth);
+  //bevelGrowth *= inputBevel * 2.0;
+  bevelGrowth *= .035;
+  bevelGrowth = max(0.0, bevelGrowth);
+  //gl_FragColor = vec4(bevelGrowth);
+
+  //Bevel, distance-based, for full grown stage
+  float bevelDistance = 1.0 - snowDistance;
+  bevelDistance = sqrt(1.0 - pow(1.0 - bevelDistance, 2.0));
+  bevelDistance = smoothstep(0.42, 1.0, bevelDistance);
+  //gl_FragColor = vec4(bevelDistance);
+
+  //Combine bevels for height
+  float height = clamp(min(bevelGrowth, bevelDistance), 0.0, 1.0);
+  //gl_FragColor = vec4(height);
+
+  heightInfo toReturn;
+  toReturn.height = height;
+  toReturn.snowGrowth = snowGrowth;
+  toReturn.snowDistance = snowDistance;
+  toReturn.bevelGrowth = bevelGrowth;
+  toReturn.n = n;
+  toReturn.toDiscard = toDiscard;
+
+  return toReturn;
+}
+
+void main() {
+
+  heightInfo h = height(coord);
+  if (h.toDiscard)
+    discard;
+
+  heightInfo hPosX = height(coord + dFdx(coord));
+  heightInfo hPosY = height(coord + dFdy(coord));
+  heightInfo hNegX = height(coord - dFdx(coord));
+  heightInfo hNegY = height(coord - dFdy(coord));
+
+  //Normal
+  vec3 v1 = vec3(1.0, 0.0, (hPosX.height - hNegX.height) * ratio * .5);
+  vec3 v2 = vec3(0.0, 1.0, (hPosY.height - hNegY.height) * ratio * .5);
+  vec3 normal = normalize(cross(v1, v2));
+
+  //Lighting
+  vec3 eye = vec3(0, 0, 1.0);
+  vec2 uv = gl_FragCoord.xy / iResolution.xy;
+
+  float lightRotation = lightMode ? 210.0 : 30.0;
+  //Larger distance > broader highlight
+  float lightDistance = lightMode ? .8 : .5;
+  float lightDepth = lightMode ? - .05 : -.04;
+
+  float lightRadians = lightRotation * 3.14 / 180.0;
+  vec2 lightCoord = vec2(sin(lightRadians), cos(lightRadians));
+  lightCoord = lightDistance * normalize(lightCoord);
+  vec3 s_light = normalize(vec3(lightCoord, lightDepth));
+  vec3 s_lightDark = normalize(vec3(lightCoord * -1.0, lightDepth));
+
+  float sIntensity = .35;
+  float specular = dot(reflect(-s_light, normal), eye);
+  float specularDark = dot(reflect(-s_lightDark, normal), eye);
+  specular = pow(max(0.0, specular), sIntensity);
+  specularDark = pow(max(0.0, specularDark), sIntensity);
+
+  //REFRACTION: scale by height to fake thickness
+  vec3 normalRotated = (modelMatrix * vec4(normal, 0.0)).xyz;
+  vec2 rfCoord = refract(-eye, normalRotated, 1.0 / 1.5).xy;
+  float rfThickness = h.snowGrowth * 2.0 + (1.0 - h.snowDistance);
+  float rfScalar = -.05;
+
+  //Background
+  vec2 bgUV = uv + rfCoord * rfScalar * rfThickness;
+  vec4 bgRefract = vec4(mix(color1, color2, (bgUV.x + bgUV.y) * .5), 1.0);
+
+  //Final render
+  vec4 renderFinal = bgRefract;
+
+  //'Droplet' gradient shading based on growth; blend so that saturation isn't lost
+  float blob = 1.0 - h.snowGrowth;
+  float luminance = dot(renderFinal, vec4(0.2, 0.7, 0.1, 0));
+  vec4 superSaturated = mix(vec4(luminance), renderFinal, 1.0 + luminance);
+  renderFinal = mix(renderFinal, 0.8 * superSaturated, 1.0 - blob);
+
+  //White outlines
+  float outlineAmount = inputOutline;
+  if (!lightMode) outlineAmount = 1.0;
+  //Have the outlines start out thin when the snowflake is small
+  float outlineMaxWidth = .35;
+  outlineMaxWidth *= .3 + .7 * inputGrowth;
+  //Outlines are based more on growth so the edges are transparent while ends are frosted
+  float outlineBase = h.height * .5 + h.bevelGrowth * .5;
+  float outline = 1.0 - smoothstep(0.0, outlineMaxWidth, outlineBase);
+  outline *= outlineAmount;
+  //Don't apply when crystals just spawn, or else they'll pop into existence
+  outline *= (1.0 - h.snowGrowth * h.snowGrowth * h.snowGrowth * h.snowGrowth);
+  //Apply noise for more interesting patterning
+  outline *= (.5 + .5 * h.n);
+
+  renderFinal = mix(renderFinal, vec4(1.2), outline);
+
+  if (lightMode) {
+    renderFinal += specular;
+    renderFinal -= specularDark * .5;
+  }
+  else {
+    renderFinal += specular * .9;
+    renderFinal -= specularDark * .25;
+  }
+
+  gl_FragColor = renderFinal;
+}

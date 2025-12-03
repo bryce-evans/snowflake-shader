@@ -1,0 +1,1301 @@
+
+<!DOCTYPE html>
+
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-144999449-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'UA-144999449-1');
+  </script>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snowflake Generator</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font: 14px sans-serif;
+      color: white;
+      background: black;
+    }
+
+    #controls {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 150px;
+      padding: 20px;
+      user-select: none;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-weight: normal;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 0;
+    }
+
+    .category {
+      font-size: 17px;
+      margin-top: 1em;
+      margin-bottom: 5px;
+      opacity: 0.5;
+      font-weight: lighter;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 16px;
+      background: none;
+    }
+
+    input[type=range]:focus {
+      outline: none;
+    }
+
+    ::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      background: #777;
+      margin-top: -6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 100px;
+    }
+
+    input[type=range]:focus::-webkit-slider-thumb {
+      background: #fff;
+    }
+
+    ::-webkit-slider-runnable-track {
+      -webkit-appearance: none;
+      background: #666;
+      height: 4px;
+    }
+
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: #aaa;
+    }
+
+    .animatePrevSlider {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-top: 1.3em;
+    }
+
+    .animatePrevSlider.pause {
+      background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQgM0g3VjEzSDRWM1pNOSAzSDEyVjEzSDlWM1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+);
+    }
+
+    .animatePrevSlider.play {
+      background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQgMTNWM0wxMiA4TDQgMTNaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==);
+    }
+
+    .animatePrevSlider.reverse {
+      background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDEzVjNMNCA4TDEyIDEzWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=);
+    }
+
+    #mobile-controls {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      padding: 10px 20px;
+      user-select: none;
+      background: black;
+      display: none;
+    }
+
+    @media (max-width: 800px) {
+      #controls {
+        display: none;
+      }
+
+      #mobile-controls {
+        display: block;
+      }
+    }
+
+    #mobileGrowthButton,
+    #mobileKaleidoscopeButton {
+      display: inline-block;
+      vertical-align: middle;
+      width: 32px;
+      height: 32px;
+    }
+
+    .mobile-play {
+      background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAxNiAxNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCAxM1YzTDEyIDhMNCAxM1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+);
+    }
+
+    .mobile-pause {
+      background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAxNiAxNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCAzSDdWMTNINFYzWk05IDNIMTJWMTNIOVYzWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="mobile-controls">
+    <h1>Snowflake Generator</h1>
+    <table>
+      <tr>
+        <td>
+          Parameters:
+        </td>
+        <td>&nbsp; &nbsp; &nbsp;</td>
+        <td>
+          Growth:
+        </td>
+        <td>&nbsp; &nbsp; &nbsp;</td>
+        <td>
+          Kaleidoscope:
+        </td>
+        <td>&nbsp; &nbsp; &nbsp;</td>
+        <td>
+          Background:
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <button id="mobileRandomButton">Randomize</button>
+        </td>
+        <td>&nbsp; &nbsp; &nbsp;</td>
+        <td>
+          <div class="mobile-play" id="mobileGrowthButton"></div>
+        </td>
+        <td>&nbsp; &nbsp; &nbsp;</td>
+        <td>
+          <div class="mobile-play" id="mobileKaleidoscopeButton"></div>
+        </td>
+        <td>&nbsp; &nbsp; &nbsp;</td>
+        <td>
+          <select id="mobileBackgroundSelect"></select>
+        </td>
+      </tr>
+    </table>
+    <p>
+      This is a simplified version for mobile.
+      For all parameters, please visit this website on desktop.
+    </p>
+  </div>
+
+  <div id="controls">
+    <h1>Snowflake Generator</h1>
+
+    <button id="randomButton">Randomize</button>
+
+    <p>
+      Background:<br>
+      <select id="backgroundSelect"></select>
+    </p>
+
+    <div class="category">Animation</div>
+    <table>
+      <tr>
+        <td>Growth:<br>
+          <input id="inputGrowth" type="range" step="any" min="0" max="1.0" value="0" data-loop="ping-pong">
+        </td>
+        <td class="animatePrevSlider play"></td>
+      </tr>
+      <tr>
+        <td>Rotation:<br>
+          <input id="inputRotation" type="range" min="0" max="360" value="0">
+        </td>
+        <td class="animatePrevSlider play"></td>
+      </tr>
+      <tr>
+        <td>Kaleidoscope X:<br>
+          <input id="inputKaleidoscope" type="range" step="any" min="0" max="1" value=".45">
+        </td>
+        <td class="animatePrevSlider play"></td>
+      </tr>
+      <tr>
+        <td>Kaleidoscope Y:<br>
+          <input id="inputKaleidoscopeY" type="range" step="any" min="0" max="1" value=".45">
+        </td>
+        <td class="animatePrevSlider play"></td>
+      </tr>
+    </table>
+
+    <div class="category">Crystal Distribution</div>
+    <table>
+      <tr>
+        <td>Density:<br>
+          <input id="inputNum" type="range" step="any" min="10" max="30" value="20" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Length:<br>
+          <input id="value4" type="range" step="any" min=".5" max="2.0" value="1." data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Noise:<br>
+          <input id="inputNoise" type="range" step="any" min="0" max=".05" value="0.025" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Seed:<br>
+          <input id="value3" type="range" min="10" max="20" value="12">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+    </table>
+
+    <div class="category" style="display:none;">Misc</div>
+    <table style="display:none;">
+      <tr>
+        <td>Min Size:<br>
+          <input id="inputMinSize" type="range" step="any" min=".1" max=".15" value=".05" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Max Size:<br>
+          <input id="inputMaxSize" type="range" step="any" min=".2" max=".4" value=".3" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Noise Scale:<br>
+          <input id="inputNoiseScale" type="range" step="any" min="5" max="18" value="10" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Bevel:<br>
+          <input id="inputBevel" type="range" step="any" min="0" max=".15" value="0.08" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Pixel density:<br>
+          <input id="inputPixelDensity" type="range" step="any" min="0.25" max="1" value="1" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>White Outline:<br>
+          <input id="inputOutline" type="range" step="any" min="0" max="1" value="0.5">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+    </table>
+
+
+
+    <div class="category">Post-Processing</div>
+    <table>
+      <tr>
+        <td>Depth of field:<br>
+          <input id="blurRadius" type="range" step="any" min="0" max="8" value="4" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+      <tr>
+        <td>Chromatic:<br>
+          <input id="chromaticAberration" type="range" step="any" min="0" max="1" value="0.5" data-loop="ping-pong">
+        </td>
+        <!-- <td class="animatePrevSlider play"></td> -->
+      </tr>
+    </table>
+    <p>
+      <button id="saveImageButton">Save image</button>
+    </p>
+  </div>
+</body>
+<script src="three.js"></script>
+<script src="CopyShader.js"></script>
+<script src="EffectComposer.js"></script>
+<script src="ShaderPass.js"></script>
+<script src="RenderPass.js"></script>
+<script>
+  async function main() {
+    const controls = document.getElementById('controls')
+    const mobileControls = document.getElementById('mobile-controls')
+
+    function canvasWidth() {
+      return innerWidth - controls.clientWidth
+    }
+
+    function canvasHeight() {
+      return innerHeight - mobileControls.clientHeight
+    }
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, canvasWidth() / canvasHeight(), 0.1, 1000);
+
+    const renderer = new THREE.WebGL1Renderer({
+      preserveDrawingBuffer: true,
+    });
+    document.body.appendChild(renderer.domElement);
+
+    let hasFocus = true;
+    let didResize = false;
+
+    window.onfocus = () => hasFocus = true;
+    window.onblur = () => hasFocus = false;
+    window.onresize = () => didResize = true;
+
+    camera.position.z = 1.5;
+
+    // Returns an object with a scene, camera, and render target. The render
+    // target has the texture. To use it, reference it like this:
+    //
+    //   uniforms: {
+    //     tex: { value: scatter.renderTarget.texture },
+    //   },
+    //
+    function createRenderToTexture(width, height) {
+      const sceneRTT = new THREE.Scene();
+      const cameraRTT = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+      const renderTargetRTT = new THREE.WebGLRenderTarget(width, height, {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+      });
+      return {
+        scene: sceneRTT,
+        camera: cameraRTT,
+        renderTarget: renderTargetRTT,
+      };
+    }
+
+    function loadTexture(url) {
+      return new Promise((resolve, reject) => {
+        const tex = new THREE.TextureLoader().load(url, resolve, null, () => resolve(tex));
+      })
+    }
+
+    // These have to be in the same order
+    const [
+      tex_crystal,
+      tex_spine,
+    ] = await Promise.all([
+      loadTexture('_Textures/crystal.png'),
+      loadTexture('_Textures/pinion.png'),
+    ]);
+
+    const backgroundSelect = document.getElementById('backgroundSelect');
+    const mobileBackgroundSelect = document.getElementById('mobileBackgroundSelect');
+
+    const possibleBackgrounds = [
+      'Light',
+      'Dark',
+    ]
+    for (let i = 0; i < possibleBackgrounds.length; i++) {
+      const option = document.createElement('option');
+      const mobileOption = document.createElement('option');
+      option.textContent = possibleBackgrounds[i];
+      mobileOption.textContent = possibleBackgrounds[i];
+      backgroundSelect.appendChild(option);
+      mobileBackgroundSelect.appendChild(mobileOption);
+    }
+
+    let currentBackgroundIndex = 0;
+    function updateBackgroundIndex(index) {
+      currentBackgroundIndex = index;
+      backgroundSelect.selectedIndex = index;
+      mobileBackgroundSelect.selectedIndex = index;
+    }
+
+    backgroundSelect.onchange = () => {
+      updateBackgroundIndex(backgroundSelect.selectedIndex);
+      writeState();
+    };
+    mobileBackgroundSelect.onchange = () => {
+      updateBackgroundIndex(mobileBackgroundSelect.selectedIndex);
+      writeState();
+    };
+    try {
+      if (matchMedia("(prefers-color-scheme: dark)").matches)
+        updateBackgroundIndex(1);
+    }
+    catch (e) { }
+
+    const hasFragDepth = renderer.extensions.has('EXT_frag_depth');
+    const scatterMaterial = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+      //blending: THREE.NormalBlending,
+      //alphaMap: tex_alpha,
+      //transparent: true,
+      //depthTest: false,
+
+      extensions: {
+        fragDepth: hasFragDepth,
+        derivatives: true,
+      },
+
+      uniforms: {
+        tex_crystal: { value: tex_crystal },
+      },
+
+      vertexShader: `
+        varying vec3 vertex;
+        varying vec2 coord;
+
+        void main() {
+          coord = uv;
+
+          // "position" is from three.js
+          vertex = position;
+          vec4 pos = vec4(position, 1);
+
+          // Apply the standard three.js matrix transforms
+          pos = modelMatrix * pos;
+          pos = viewMatrix * pos;
+          pos = projectionMatrix * pos;
+
+          gl_Position = pos;
+        }
+      `,
+
+      fragmentShader: `
+        uniform sampler2D tex_crystal;
+        varying vec3 vertex;
+        varying vec2 coord;
+
+        // This scales the fwidth values so they fit in the range 0 to 1 but use most of that range
+        const float hexagonFwidthScale = 5.0;
+
+        void main() {
+          vec2 uv = coord;
+
+          vec4 crystal = texture2D(tex_crystal, uv);
+          float growth = crystal.r;
+          float distance = crystal.g;
+          float alpha = crystal.b;
+
+          ${hasFragDepth ? 'gl_FragDepthEXT = 1.0-(growth*alpha);' : 'if (alpha == 0.0) discard;'}
+
+          // This is similar to fwidth(growth) but is constant over the whole triangle, which avoids line artifacts due to value changes
+          float fakeFwidthGrowth = length(vec2(fwidth(uv.x), fwidth(uv.y))) * hexagonFwidthScale;
+
+          gl_FragColor = vec4(growth, fakeFwidthGrowth, distance, alpha*(1.0-vertex.z));
+        }
+      `,
+    });
+
+    var scatterVertices = [];
+    var scatterUV = [];
+
+    function quad1(origin, size, length, angle, value) {
+      const pi = 3.14;
+
+      //Why janky
+      radians = (-angle + 180) * (pi / 180);
+      o = new THREE.Vector2(origin.x, origin.y);
+      sizeX = size * .5;
+      sizeY = sizeX * length;
+
+      a = new THREE.Vector2(origin.x - sizeX, origin.y + sizeY);
+      b = new THREE.Vector2(origin.x + sizeX, origin.y + sizeY);
+      c = new THREE.Vector2(origin.x - sizeX, origin.y - sizeY);
+      d = new THREE.Vector2(origin.x + sizeX, origin.y - sizeY);
+
+      a.rotateAround(o, radians);
+      b.rotateAround(o, radians);
+      c.rotateAround(o, radians);
+      d.rotateAround(o, radians);
+
+      scatterVertices.push(
+        a.x, a.y, value,
+        b.x, b.y, value,
+        d.x, d.y, value,
+
+        a.x, a.y, value,
+        d.x, d.y, value,
+        c.x, c.y, value,
+      )
+
+      scatterUV.push(
+        0, 0,
+        1, 0,
+        1, 1,
+
+        0, 0,
+        1, 1,
+        0, 1,
+      )
+    }
+
+    function growCrystals(sizeMin, sizeMax, angle, length, seed, loopFrame, num, yKaleidoscope) {
+      THREE.MathUtils.seededRandom(+seed);
+      scatterVertices = [];
+      scatterUV = [];
+
+      for (let i = 0; i < num; i++) {
+        let r = THREE.MathUtils.seededRandom();
+        let y = (1.0 / num) * i;
+        y = + (y + parseFloat(yKaleidoscope)) % 1;
+        y *= .95
+
+        //Distribute crystals: scale down the higher on the pinion they are
+        sizeMin = parseFloat(sizeMin);
+        sizeMax = parseFloat(sizeMax);
+
+        sizeRandom = r * (sizeMax - sizeMin) + sizeMin;
+        sizeRandom *= 1.0 - y;
+        valueRandom = r * .15 + .85 * y;
+        sizePercent = (sizeRandom - sizeMin) / (sizeMax - sizeMin);
+        lengthRandom = parseFloat(length) * (1.0 + sizePercent);
+
+        //Stagger size of crystals for kaleidoscope X effect
+        offset = THREE.MathUtils.seededRandom();
+        loop = parseFloat(loopFrame) * 2.0 + offset * 2.0;
+        if (loop >= 2.0)
+          loop -= 2.0;
+        if (loop > 1.0)
+          loop = 1.0 - (+loop % 1);
+        sizeRandom *= loop;
+
+        //Prevent crystals from neighboring segments from colliding into each other
+        origin = new THREE.Vector2(0, 0);
+        p1 = new THREE.Vector2(0, y);
+        originNormal = new THREE.Vector2(Math.cos(3.14 / 6.0), -Math.sin(3.14 / 6.0));
+        a1 = new THREE.Vector2(Math.sin(angle * (Math.PI / 180)), Math.cos(angle * (Math.PI / 180)));
+
+        j = (origin.sub(p1)).dot(originNormal);
+        k = a1.dot(originNormal);
+        tMax = j / k;
+        lengthMax = tMax / sizeRandom;
+        lengthMax *= .9;
+        lengthMax *= (.7 + r * .3);
+
+        lengthRandom = Math.min(lengthRandom, lengthMax);
+
+        x = lengthRandom * sizeRandom * .5 * Math.sin((angle * 3.14) / 180.0) + 0.5;
+        y = lengthRandom * sizeRandom * .5 * Math.cos((angle * 3.14) / 180.0) + y;
+
+        x = x * 2 - 1;
+        y = y * 2 - 1;
+        sizeRandom *= 2;
+
+        quad1({ x: x, y: y }, sizeRandom, lengthRandom, angle, valueRandom);
+      }
+    }
+
+    let scatterGeometry = new THREE.BufferGeometry();
+    scatterGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(scatterVertices), 3));
+    scatterGeometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(scatterUV), 2));
+    const scatterMesh = new THREE.Mesh(scatterGeometry, scatterMaterial);
+
+    const scatter = createRenderToTexture(512, 512);
+    scatter.scene.add(scatterMesh);
+
+    renderer.domElement.onmousedown = e => {
+      let x = e.pageX;
+      let y = e.pageY;
+
+      onmousemove = e => {
+        plane.rotation.x += (e.pageY - y) / 100;
+        plane.rotation.y += (e.pageX - x) / 100;
+        x = e.pageX;
+        y = e.pageY;
+      };
+
+      onmouseup = () => {
+        onmousemove = null;
+        onmouseup = null;
+      }
+    };
+
+    randomButton.onclick = mobileRandomButton.onclick = e => {
+      for (var i = 0; i < allSliders.length; i++) {
+        slider = allSliders[i];
+        switch (slider.id) {
+          case 'inputRotation':
+          case 'inputPixelDensity':
+          case 'inputBevel':
+          case 'blurRadius':
+          case 'chromaticAberration':
+          case 'inputOutline':
+            continue;
+            break;
+          case 'inputGrowth':
+            slider.value = .4 + Math.random() * .6;
+            break;
+          default:
+            let min = +slider.min;
+            let max = +slider.max;
+            slider.value = (max - min) * Math.random() + min;
+            break;
+        }
+      }
+      writeState();
+    }
+
+    saveImageButton.onclick = () => {
+      const renderWidth = renderer.domElement.width;
+      const renderHeight = renderer.domElement.height;
+      const tempCanvas = document.createElement('canvas');
+      const tempContext = tempCanvas.getContext('2d');
+
+      // Crop to a square
+      const renderMin = Math.min(renderWidth, renderHeight);
+      tempCanvas.width = renderMin;
+      tempCanvas.height = renderMin;
+      tempContext.drawImage(renderer.domElement,
+        (renderMin - renderWidth) / 2,
+        (renderMin - renderHeight) / 2,
+        renderWidth,
+        renderHeight,
+      );
+
+      // Save as a JPEG image
+      const url = tempCanvas.toDataURL('image/jpeg', 0.9);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'snowflake.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    renderer.domElement.addEventListener('touchstart', e => {
+      let old = e.touches[0];
+
+      const touchmove = e => {
+        if (e.touches.length > 1) {
+          touchend();
+          return;
+        }
+
+        for (const touch of e.touches) {
+          if (touch.identifier === old.identifier) {
+            plane.rotation.x += (touch.pageY - old.pageY) / 100;
+            plane.rotation.y += (touch.pageX - old.pageX) / 100;
+            old = touch;
+            e.preventDefault();
+            return;
+          }
+        }
+      };
+
+      const touchend = () => {
+        document.removeEventListener('touchmove', touchmove, { passive: false });
+        document.removeEventListener('touchend', touchend, { passive: false });
+        document.removeEventListener('touchcancel', touchend, { passive: false });
+      };
+
+      document.addEventListener('touchmove', touchmove, { passive: false });
+      document.addEventListener('touchend', touchend, { passive: false });
+      document.addEventListener('touchcancel', touchend, { passive: false });
+    }, { passive: false });
+
+    const tex_scatter = scatter.renderTarget.texture;
+
+    const materialBG = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+
+      extensions: {
+        derivatives: true,
+      },
+      uniforms: {
+        iTime: { value: 0 },
+        iResolution: { value: new THREE.Vector2(0.0, 0.0) },
+        color1: { value: new THREE.Vector2(0.0, 0.0, 0.0) },
+        color2: { value: new THREE.Vector2(0.0, 0.0, 0.0) },
+      },
+
+      vertexShader: `
+        uniform float iTime;
+        varying vec2 coord;
+        uniform vec2 iResolution;
+
+        void main() {
+          // "uv" is from three.js
+          coord = uv;
+
+          // "position" is from three.js
+          vec4 pos = vec4(position, 1);
+
+          // Apply the standard three.js matrix transforms
+          pos = modelMatrix * pos;
+          pos = viewMatrix * pos;
+          pos = projectionMatrix * pos;
+
+          gl_Position = pos;
+        }
+      `,
+
+      fragmentShader: `
+        uniform float iTime;
+        uniform vec2 iResolution;
+        varying vec2 coord;
+        uniform vec3 color1;
+        uniform vec3 color2;
+
+        float hash12(vec2 p) {
+          vec3 p3 = fract(vec3(p.xyx) * .1031);
+          p3 += dot(p3, p3.yzx + 33.33);
+          return fract((p3.x + p3.y) * p3.z);
+        }
+
+        void main() {
+          vec2 uv = gl_FragCoord.xy / iResolution.xy;
+          gl_FragColor = vec4(uv,1.0,1.0);
+
+          vec3 gradient = mix(color1,color2,(uv.x + uv.y) * .5);
+          gradient += (hash12(gl_FragCoord.xy) - 0.5) / 64.0; // Dithering
+          gl_FragColor = vec4(gradient,1.0);
+        }
+      `,
+    });
+
+    const geometryBG = new THREE.PlaneGeometry(10, 10, 1);
+    const planeBG = new THREE.Mesh(geometryBG, materialBG);
+    planeBG.position.z = -1;
+    scene.add(planeBG);
+
+    const material = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+
+      extensions: {
+        derivatives: true,
+      },
+
+      uniforms: {
+        tex_spine: { value: tex_spine },
+        tex_scatter: { value: tex_scatter },
+        iTime: { value: 0 },
+        iResolution: { value: new THREE.Vector2(0.0, 0.0) },
+        inputGrowth: { value: 0 },
+        inputRotation: { value: 0 },
+        inputKaleidoscope: { value: 0 },
+        inputKaleidoscopeY: { value: 0 },
+        inputNoise: { value: 0 },
+        inputNoiseScale: { value: 0 },
+        inputBevel: { value: 0 },
+        inputOutline: { value: 0 },
+        lightMode: { value: true },
+        color1: { value: new THREE.Vector2(0.0, 0.0, 0.0) },
+        color2: { value: new THREE.Vector2(0.0, 0.0, 0.0) },
+        ratio: { value: 0 },
+      },
+
+      vertexShader: `
+        uniform float iTime;
+        varying vec2 coord;
+
+        void main() {
+          // "uv" is from three.js
+          coord = uv;
+
+          // "position" is from three.js
+          vec4 pos = vec4(position, 1);
+
+          // Apply the standard three.js matrix transforms
+          pos = modelMatrix * pos;
+          pos = viewMatrix * pos;
+          pos = projectionMatrix * pos;
+
+          gl_Position = pos;
+        }
+      `,
+
+      fragmentShader: await fetch('snowflake.glslx').then(r => r.text()),
+    });
+
+    const geometry = new THREE.PlaneGeometry(1, 1, 1);
+    const plane = new THREE.Mesh(geometry, material);
+    //plane.rotation.x = -0.4;
+    //plane.rotation.y = -0.4;
+    scene.add(plane);
+    // scene.add(scatterMesh)
+
+    var prevTime = 0.0;
+    var presentTime = performance.now();
+    var allSliders = [];
+    for (let slider of document.querySelectorAll('input[type=range]')) {
+      slider.onchange = writeState;
+      allSliders.push(slider);
+    }
+
+    // Enable animation for all sliders
+    let sliderAnimators = Array.prototype.map.call(document.querySelectorAll('.animatePrevSlider'), (element, i) => {
+      let slider = element.previousElementSibling.querySelector('input'); // The <input>
+      let isAnimating = false;
+      let direction = true;
+      let startValue;
+      let timeSoFar;
+      element.style.cursor = 'pointer';
+      element.onclick = e => {
+        if (e) e.preventDefault();
+        isAnimating = !isAnimating;
+        element.classList.toggle('pause', isAnimating);
+        element.classList.toggle('play', !isAnimating && direction);
+        element.classList.toggle('reverse', !isAnimating && !direction);
+        if (slider.id === 'inputGrowth') {
+          mobileGrowthButton.classList.toggle('mobile-pause', isAnimating);
+          mobileGrowthButton.classList.toggle('mobile-play', !isAnimating);
+        }
+        if (slider.id === 'inputKaleidoscope') {
+          mobileKaleidoscopeButton.classList.toggle('mobile-pause', isAnimating);
+          mobileKaleidoscopeButton.classList.toggle('mobile-play', !isAnimating);
+        }
+        if (isAnimating) {
+          let min = +slider.min;
+          let max = +slider.max;
+          timeSoFar = (+slider.value - min) / (max - min);
+        }
+      };
+
+      if (slider.id === 'inputGrowth') {
+        mobileGrowthButton.addEventListener('click', () => {
+          element.onclick();
+        });
+      } else if (slider.id === 'inputKaleidoscope' || slider.id === 'inputKaleidoscopeY') {
+        mobileKaleidoscopeButton.addEventListener('click', () => {
+          element.onclick();
+        });
+      }
+
+      // Start animating growth by default
+      if (i === 0 && location.hash === '') element.onclick();
+
+      return seconds => {
+        if (isAnimating) {
+          let min = +slider.min;
+          let max = +slider.max;
+
+          timeSoFar += direction ? seconds * .1 : seconds * -.1;
+          if (timeSoFar >= 1 || timeSoFar <= 0) {
+            if (slider.dataset.loop == 'ping-pong')
+              direction = !direction;
+            timeSoFar = direction ? 0 : 1;
+          }
+          let t = timeSoFar;
+
+          if (slider.dataset.loop == 'sin')
+            t = Math.sin(test * (Math.PI * .5));
+
+          let value = min + (max - min) * t;
+          slider.value = slider.step === 'any' ? value : Math.floor(value);
+        }
+      }
+    })
+    readState();
+
+    function readState() {
+      try {
+        if (location.hash[0] === '#') {
+          let values = location.hash.slice(1).split(',')
+
+          let bgValue = values.pop()
+          if (values.length === allSliders.length && bgValue) {
+            let bgIndex = possibleBackgrounds.indexOf(atob(bgValue));
+            let hasBadNumber = false;
+            for (let value of values) {
+              if (!isFinite(+value)) {
+                hasBadNumber = true;
+              }
+            }
+            if (!hasBadNumber && bgIndex >= 0) {
+              for (let i = 0; i < allSliders.length; i++) {
+                allSliders[i].value = values[i];
+              }
+              updateBackgroundIndex(bgIndex);
+            }
+
+          }
+
+        }
+      } catch (e) {
+        console.error('Unable to restore state from URL: ' + e);
+      }
+    }
+
+    function writeState() {
+      let values = []
+      for (let slider of allSliders) {
+        values.push(+(+slider.value).toFixed(2))
+      }
+      values.push(btoa(possibleBackgrounds[currentBackgroundIndex]));
+      let hash = values.join(',')
+      history.replaceState(null, '', '#' + hash)
+    }
+
+    let prevFrameAllInputs = null;
+    let prevGrowCrystalsArgs = null;
+
+    // All inputs that could potentially affect the rendering of a frame should go here
+    function allInputsForFrame() {
+      const allInputs = [
+        // Window size
+        innerWidth, innerHeight, devicePixelRatio,
+        // Snowflake location
+        plane.position.x, plane.position.y, plane.position.z,
+        plane.rotation.x, plane.rotation.y, plane.rotation.z,
+        // Background picker
+        currentBackgroundIndex,
+      ];
+      // All slider values
+      for (const slider of allSliders) {
+        allInputs.push(+slider.value);
+      }
+      return allInputs;
+    }
+
+    const isIOS = /iPad|iPhone/.test(navigator.userAgent) ||
+
+      // Try to detect iPad pretending to be a desktop device. The iPad mostly
+      // behaves like a desktop device but still crashes like an iPhone when
+      // the canvas is resized, so we still need to special-case it.
+      (/\bMac\b/.test(navigator.userAgent) && navigator.maxTouchPoints > 2);
+
+    let ratio;
+    let rawPixelWidth;
+    let rawPixelHeight;
+
+    function updateScreenSize() {
+      const rendererWidth = canvasWidth();
+      const rendererHeight = canvasHeight();
+      ratio = window.devicePixelRatio * +inputPixelDensity.value || 1;
+      rawPixelWidth = Math.round(rendererWidth * ratio);
+      rawPixelHeight = Math.round(rendererHeight * ratio);
+      renderer.setSize(rawPixelWidth, rawPixelHeight);
+      composer.setSize(rawPixelWidth, rawPixelHeight);
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.top = mobileControls.clientHeight + 'px';
+      renderer.domElement.style.width = rendererWidth + 'px';
+      renderer.domElement.style.height = rendererHeight + 'px';
+      camera.aspect = rendererWidth / rendererHeight;
+      camera.updateProjectionMatrix();
+    }
+
+    class CustomPass extends THREE.Pass {
+      constructor() {
+        super();
+
+        const params = {
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          format: THREE.RGBAFormat,
+        }
+
+        this.rt1 = new THREE.WebGLRenderTarget(256, 256, params);
+        this.rt1.texture.generateMipmaps = false;
+
+        this.rt2 = new THREE.WebGLRenderTarget(256, 256, params);
+        this.rt2.texture.generateMipmaps = false;
+
+        this.raycaster = new THREE.Raycaster;
+
+        this.downResMaterial = new THREE.ShaderMaterial({
+          uniforms: {
+            tex: { value: null },
+            depthInfo: { value: new THREE.Vector2 },
+            chromatic: { value: 0 },
+          },
+          vertexShader: `
+            uniform vec2 depthInfo;
+            varying vec2 coord;
+            varying float depth;
+            void main() {
+              coord = uv;
+              depth = dot(depthInfo, uv - 0.5) * 2.0;
+              gl_Position = vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform float chromatic;
+            uniform sampler2D tex;
+            varying vec2 coord;
+            varying float depth;
+            void main() {
+              gl_FragColor = texture2D(tex, coord);
+              gl_FragColor.a = sqrt(abs(depth)) + length(coord - 0.5) * chromatic * 0.5;
+            }
+          `,
+        });
+        this.downResQuad = new THREE.Pass.FullScreenQuad(this.downResMaterial);
+
+        this.material = new THREE.ShaderMaterial({
+          uniforms: {
+            tex: { value: null },
+            blurInfo: { value: new THREE.Vector4 },
+          },
+          vertexShader: `
+            varying vec2 coord;
+            void main() {
+              coord = uv;
+              gl_Position = vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform sampler2D tex;
+            uniform vec4 blurInfo;
+            varying vec2 coord;
+            void main() {
+              vec4 color = texture2D(tex, coord);
+              color *= color;
+              color *= color;
+
+              vec2 blurDelta = blurInfo.xy * (blurInfo.w == 0.0 ? vec2(1, 0) : vec2(0, 1));
+              float blurRadius = blurInfo.z * color.a;
+              float weight = 1.0;
+
+              if (blurRadius != 0.0) {
+                for (int i = 1; i < 10; i += 2) {
+                  float t0 = float(i);
+                  float t1 = float(i + 1);
+
+                  // Triangle blur
+                  float w0 = 1.0 - t0 / blurRadius;
+                  if (w0 < 0.0) break;
+                  float w1 = max(0.0, 1.0 - t1 / blurRadius);
+
+                  float w01 = w0 + w1;
+                  float t01 = t0 + (t1 - t0) * w1 / w01;
+
+                  vec4 neg = texture2D(tex, coord - blurDelta * t01);
+                  neg *= neg;
+                  neg *= neg;
+
+                  vec4 pos = texture2D(tex, coord + blurDelta * t01);
+                  pos *= pos;
+                  pos *= pos;
+
+                  color += (neg + pos) * w01;
+                  weight += 2.0 * w01;
+                }
+              }
+
+              vec4 d = color / weight;
+              d = sqrt(d);
+              d = sqrt(d);
+
+              gl_FragColor = d;
+            }
+          `,
+        });
+        this.quad = new THREE.Pass.FullScreenQuad(this.material);
+
+        this.copyChromaticMaterial = new THREE.ShaderMaterial({
+          uniforms: {
+            originalTex: { value: null },
+            blurredTex: { value: null },
+            depthInfo: { value: new THREE.Vector2 },
+            chromatic: { value: 0 },
+            blurScale: { value: 0 },
+          },
+          vertexShader: `
+            varying vec2 coord;
+            void main() {
+              coord = uv;
+              gl_Position = vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform float chromatic;
+            uniform sampler2D originalTex;
+            uniform sampler2D blurredTex;
+            uniform float blurScale;
+            uniform vec2 depthInfo;
+            varying vec2 coord;
+
+            vec4 sample(float t, vec2 coord) {
+              if (t < 0.0) return texture2D(originalTex, coord);
+              if (t > 1.0) return texture2D(blurredTex, coord);
+              return mix(
+                texture2D(originalTex, coord),
+                texture2D(blurredTex, coord),
+                t
+              );
+            }
+
+            void main() {
+              float offset = chromatic * 0.02;
+              float depth = dot(depthInfo, coord - 0.5) * 2.0;
+              float t = abs(depth * blurScale);
+              gl_FragColor.r = sample(t, mix(vec2(0.5), coord, 1.0 - offset)).r;
+              gl_FragColor.g = sample(t, coord).g;
+              gl_FragColor.b = sample(t, mix(vec2(0.5), coord, 1.0 + offset)).b;
+              gl_FragColor.rg += sample(t, mix(vec2(0.5), coord, 1.0 - offset * 0.5)).rg;
+              gl_FragColor.gb += sample(t, mix(vec2(0.5), coord, 1.0 + offset * 0.5)).gb;
+              gl_FragColor.rgb *= 1.0 / vec3(2.0, 3.0, 2.0);
+            }
+          `,
+        });
+        this.copyChromaticQuad = new THREE.Pass.FullScreenQuad(this.copyChromaticMaterial);
+      }
+
+      dispose() {
+        this.rt1.dispose();
+        this.rt2.dispose();
+      }
+
+      setSize(width, height) {
+        const resx = Math.round(width / 2);
+        const resy = Math.round(height / 2);
+        this.rt1.setSize(resx, resy);
+        this.rt2.setSize(resx, resy);
+      }
+
+      render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */) {
+        const matrix = new THREE.Matrix4();
+        matrix.makeRotationFromQuaternion(plane.quaternion);
+        const normal = new THREE.Vector3(matrix.elements[8], matrix.elements[9], matrix.elements[10]);
+
+        const blurScale = +blurRadius.value * readBuffer.texture.image.height / 1000;
+        const chromaticScale = +chromaticAberration.value;
+        let fromTex = readBuffer.texture;
+
+        if (blurScale) {
+          this.downResMaterial.uniforms.chromatic.value = chromaticScale;
+          this.downResMaterial.uniforms.tex.value = readBuffer.texture;
+          this.downResMaterial.uniforms.depthInfo.value.set(
+            normal.x / normal.z * camera.aspect,
+            normal.y / normal.z,
+          );
+          renderer.setRenderTarget(this.rt1);
+          this.downResQuad.render(renderer);
+
+          const dx = 1 / this.rt1.texture.image.width;
+          const dy = 1 / this.rt1.texture.image.height;
+
+          this.material.uniforms.tex.value = this.rt1.texture;
+          this.material.uniforms.blurInfo.value.set(dx, dy, blurScale, 0);
+          renderer.setRenderTarget(this.rt2);
+          this.quad.render(renderer);
+
+          this.material.uniforms.tex.value = this.rt2.texture;
+          this.material.uniforms.blurInfo.value.set(dx, dy, blurScale, 1);
+          renderer.setRenderTarget(this.rt1);
+          this.quad.render(renderer);
+
+          fromTex = this.rt1.texture;
+        }
+
+        this.copyChromaticMaterial.uniforms.originalTex.value = readBuffer.texture;
+        this.copyChromaticMaterial.uniforms.blurredTex.value = fromTex;
+        this.copyChromaticMaterial.uniforms.chromatic.value = chromaticScale;
+        this.copyChromaticMaterial.uniforms.blurScale.value = blurScale;
+        this.copyChromaticMaterial.uniforms.depthInfo.value.set(
+          normal.x / normal.z * camera.aspect,
+          normal.y / normal.z,
+        );
+        if (this.renderToScreen) {
+          renderer.setRenderTarget(null);
+          this.copyChromaticQuad.render(renderer);
+        } else {
+          renderer.setRenderTarget(writeBuffer);
+          if (this.clear) renderer.clear();
+          this.copyChromaticQuad.render(renderer);
+        }
+      }
+    }
+
+    const composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    composer.addPass(new CustomPass);
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Don't render if the window is in the background
+      if (!hasFocus && !didResize) return;
+      didResize = false;
+
+      //Update inputs
+      prevTime = presentTime;
+      presentTime = performance.now();
+      let seconds = (presentTime - prevTime) / 1000;
+      if (seconds > 0.5) seconds = 0; // Avoid a huge jump for inactive tabs becoming active
+      for (let callback of sliderAnimators)
+        callback(seconds);
+
+      // Don't let the user rotate it flat
+      plane.rotation.x = Math.max(-1, Math.min(1, plane.rotation.x));
+      plane.rotation.y = Math.max(-1, Math.min(1, plane.rotation.y));
+
+      // Don't render if this frame would look the same as the last frame
+      const allInputs = JSON.stringify(allInputsForFrame());
+      if (allInputs === prevFrameAllInputs) return;
+      prevFrameAllInputs = allInputs;
+
+      // Avoid updating the screen size on iOS or Mobile Safari will crash repeatedly 🙄
+      if (!isIOS) updateScreenSize();
+
+      // Update uniforms
+      var lightMode = currentBackgroundIndex == 0;
+      var bgColor1;
+      var bgColor2;
+      if (lightMode) {
+        bgColor1 = new THREE.Vector3(.23, .42, .52);
+        bgColor2 = new THREE.Vector3(.7, .89, .94);
+      }
+      else {
+        bgColor1 = new THREE.Vector3(.2, .31, .42);
+        bgColor2 = new THREE.Vector3(.0, .05, .1);
+      }
+      material.uniforms.iTime.value = performance.now() / 1000;
+      material.uniforms.iResolution.value.set(rawPixelWidth, rawPixelHeight);
+      material.uniforms.inputGrowth.value = inputGrowth.value;
+      material.uniforms.inputRotation.value = inputRotation.value;
+      material.uniforms.inputKaleidoscope.value = inputKaleidoscope.value;
+      material.uniforms.inputKaleidoscopeY.value = inputKaleidoscopeY.value;
+      material.uniforms.inputNoise.value = inputNoise.value;
+      material.uniforms.inputNoiseScale.value = inputNoiseScale.value;
+      material.uniforms.inputBevel.value = inputBevel.value;
+      material.uniforms.inputOutline.value = inputOutline.value;
+      material.uniforms.ratio.value = ratio;
+      material.uniforms.color1.value = bgColor1;
+      material.uniforms.color2.value = bgColor2;
+      material.uniforms.lightMode.value = lightMode;
+      materialBG.uniforms.iResolution.value.set(rawPixelWidth, rawPixelHeight);
+      materialBG.uniforms.color1.value = bgColor1;
+      materialBG.uniforms.color2.value = bgColor2;
+      //Update scatter map + render to texture
+      const args = [inputMinSize.value, inputMaxSize.value, 60.0, value4.value, value3.value, inputKaleidoscope.value, inputNum.value, inputKaleidoscopeY.value];
+      if (JSON.stringify(args) !== JSON.stringify(prevGrowCrystalsArgs)) {
+        prevGrowCrystalsArgs = args;
+        growCrystals(...args);
+        scatterGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(scatterVertices), 3));
+        scatterGeometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(scatterUV), 2));
+        scatterMesh.geometry = scatterGeometry;
+
+        renderer.setRenderTarget(scatter.renderTarget);
+        renderer.render(scatter.scene, scatter.camera);
+      }
+
+      // Render to the screen
+      renderer.setRenderTarget(null);
+
+      // For performance, only use the composer if it's relevant
+      if (+blurRadius.value > 0 || +chromaticAberration.value > 0) {
+        composer.render();
+      } else {
+        renderer.render(scene, camera);
+      }
+    }
+
+    updateScreenSize();
+    animate();
+  }
+
+  main().catch(e => setTimeout(() => { throw e }))
+</script>
+
