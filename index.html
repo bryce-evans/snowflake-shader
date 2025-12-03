@@ -25,7 +25,7 @@
 
     #controls {
       position: absolute;
-      right: 0;
+      left: -9999px;
       top: 0;
       bottom: 0;
       width: 150px;
@@ -149,6 +149,27 @@
     .mobile-pause {
       background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAxNiAxNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCAzSDdWMTNINFYzWk05IDNIMTJWMTNIOVYzWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=);
     }
+
+    #messages {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 1000;
+      font-size: 24px;
+      font-family: serif;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .message {
+      opacity: 0;
+      margin-bottom: 10px;
+      transition: opacity 2s ease-in;
+    }
+
+    .message.visible {
+      opacity: 1;
+    }
   </style>
 </head>
 
@@ -211,25 +232,25 @@
     <table>
       <tr>
         <td>Growth:<br>
-          <input id="inputGrowth" type="range" step="any" min="0" max="1.0" value="0" data-loop="ping-pong">
+          <input id="inputGrowth" type="range" step="any" min="0.0" max="0.9" value="0.1" data-loop="ping-pong" data-speed="0.1">
         </td>
         <td class="animatePrevSlider play"></td>
       </tr>
       <tr>
         <td>Rotation:<br>
-          <input id="inputRotation" type="range" min="0" max="360" value="0">
+          <input id="inputRotation" type="range" step="any" min="0" max="360" value="0" data-speed="0.02">
         </td>
         <td class="animatePrevSlider play"></td>
       </tr>
       <tr>
         <td>Kaleidoscope X:<br>
-          <input id="inputKaleidoscope" type="range" step="any" min="0" max="1" value=".45">
+          <input id="inputKaleidoscope" type="range" step="any" min="0" max="1" value="0.516150841346154" data-speed="0.1">
         </td>
         <td class="animatePrevSlider play"></td>
       </tr>
       <tr>
         <td>Kaleidoscope Y:<br>
-          <input id="inputKaleidoscopeY" type="range" step="any" min="0" max="1" value=".45">
+          <input id="inputKaleidoscopeY" type="range" step="any" min="0" max="1" value="0.771859975961538" data-speed="0.1">
         </td>
         <td class="animatePrevSlider play"></td>
       </tr>
@@ -324,6 +345,16 @@
       <button id="saveImageButton">Save image</button>
     </p>
   </div>
+
+  <div id="messages">
+    <div class="message" id="message1">我情爱的冰凌,</div>
+    <div class="message" id="message2">我想你了</div>
+    <div class="message" id="message3">我一直一直想你</div>
+    <div class="message" id="message4">从来没有一刻停止想你</div>
+    <div class="message" id="message5">生日快乐</div>
+    <div class="message" id="message6">祝你无论在哪里都能幸福</div>
+    <div class="message" id="message7" style="float:right;"><div>～你的宝贝小贝</div><div style="font-size: 12pt; margin-top: 4ex; float:right;">2025年12月3日</div></div>
+  </div>
 </body>
 <script src="three.js"></script>
 <script src="CopyShader.js"></script>
@@ -336,11 +367,11 @@
     const mobileControls = document.getElementById('mobile-controls')
 
     function canvasWidth() {
-      return innerWidth - controls.clientWidth
+      return innerWidth
     }
 
     function canvasHeight() {
-      return innerHeight - mobileControls.clientHeight
+      return innerHeight
     }
 
     const scene = new THREE.Scene();
@@ -358,7 +389,7 @@
     window.onblur = () => hasFocus = false;
     window.onresize = () => didResize = true;
 
-    camera.position.z = 1.5;
+    camera.position.z = 1.0;
 
     // Returns an object with a scene, camera, and render target. The render
     // target has the texture. To use it, reference it like this:
@@ -428,11 +459,6 @@
       updateBackgroundIndex(mobileBackgroundSelect.selectedIndex);
       writeState();
     };
-    try {
-      if (matchMedia("(prefers-color-scheme: dark)").matches)
-        updateBackgroundIndex(1);
-    }
-    catch (e) { }
 
     const hasFragDepth = renderer.extensions.has('EXT_frag_depth');
     const scatterMaterial = new THREE.ShaderMaterial({
@@ -820,8 +846,8 @@
 
     const geometry = new THREE.PlaneGeometry(1, 1, 1);
     const plane = new THREE.Mesh(geometry, material);
-    //plane.rotation.x = -0.4;
-    //plane.rotation.y = -0.4;
+    plane.rotation.x = -0.4;
+    plane.rotation.y = -0.4;
     scene.add(plane);
     // scene.add(scatterMesh)
 
@@ -872,18 +898,31 @@
         });
       }
 
-      // Start animating growth by default
-      if (i === 0 && location.hash === '') element.onclick();
+      // Start animating growth and rotation by default
+      if (i === 0 || i === 1) element.onclick();
 
       return seconds => {
         if (isAnimating) {
           let min = +slider.min;
           let max = +slider.max;
 
-          timeSoFar += direction ? seconds * .1 : seconds * -.1;
+          let speed = slider.dataset.speed;
+          timeSoFar += direction ? seconds * speed : seconds * -speed;
           if (timeSoFar >= 1 || timeSoFar <= 0) {
-            if (slider.dataset.loop == 'ping-pong')
+            if (slider.dataset.loop == 'ping-pong') {
+              // When growth slider reaches 0 and starts going back up, adjust kaleidoscope values
+              if (slider.id === 'inputGrowth' && timeSoFar <= 0 && !direction) {
+                const kaleidoscopeX = document.getElementById('inputKaleidoscope');
+                const kaleidoscopeY = document.getElementById('inputKaleidoscopeY');
+                if (kaleidoscopeX && kaleidoscopeY) {
+                  const randomOffsetX = -0.05 + Math.random() * 0.1;
+                  kaleidoscopeX.value = Math.max(0, Math.min(1, kaleidoscopeX.value + randomOffsetX));
+                  const randomOffsetY = -0.05 + Math.random() * 0.1;
+                  kaleidoscopeY.value = Math.max(0, Math.min(1, kaleidoscopeY.value + randomOffsetY));
+                }
+              }
               direction = !direction;
+            }
             timeSoFar = direction ? 0 : 1;
           }
           let t = timeSoFar;
@@ -1294,6 +1333,29 @@
 
     updateScreenSize();
     animate();
+
+    // Fade in messages sequentially
+    setTimeout(() => {
+      document.getElementById('message1').classList.add('visible');
+    }, 0);
+    setTimeout(() => {
+      document.getElementById('message2').classList.add('visible');
+    }, 2000);
+    setTimeout(() => {
+      document.getElementById('message3').classList.add('visible');
+    }, 4000);
+    setTimeout(() => {
+      document.getElementById('message4').classList.add('visible');
+    }, 6000);
+    setTimeout(() => {
+      document.getElementById('message5').classList.add('visible');
+    }, 8000);
+    setTimeout(() => {
+      document.getElementById('message6').classList.add('visible');
+    }, 10000);
+    setTimeout(() => {
+      document.getElementById('message7').classList.add('visible');
+    }, 12000);
   }
 
   main().catch(e => setTimeout(() => { throw e }))
