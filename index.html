@@ -116,13 +116,14 @@
 
     #mobile-controls {
       position: absolute;
-      left: 0;
+      left: -9999px;
       top: 0;
       right: 0;
       padding: 10px 20px;
       user-select: none;
       background: black;
       display: none;
+      opacity: 0 !important;
     }
 
     @media (max-width: 800px) {
@@ -131,7 +132,7 @@
       }
 
       #mobile-controls {
-        display: block;
+        display: none !important;
       }
     }
 
